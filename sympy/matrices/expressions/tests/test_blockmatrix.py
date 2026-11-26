@@ -6,7 +6,7 @@ from sympy.matrices.expressions.blockmatrix import (
     BlockMatrix, bc_dist, bc_matadd, bc_transpose, bc_inverse,
     blockcut, reblock_2x2, deblock)
 from sympy.matrices.expressions import (
-    MatrixSymbol, Identity, trace, det, ZeroMatrix, OneMatrix)
+    MatrixSymbol, Identity, trace, det, ZeroMatrix, OneMatrix, Determinant)
 from sympy.matrices.expressions.inverse import Inverse
 from sympy.matrices.expressions.matpow import MatPow
 from sympy.matrices.expressions.transpose import Transpose
@@ -509,3 +509,34 @@ def test_transpose_inverse_commute():
 
     assert block_collapse(MatPow(A.transpose(), -2)) == MatPow(A, -2)
     assert block_collapse(MatPow(A, -2).transpose()) == MatPow(A, -2)
+
+
+def test_BlockMatrix_determinant():
+    n = Symbol('n')
+    m = Symbol('m')
+    A = MatrixSymbol('A', n, n)
+    D = MatrixSymbol('D', m, m)
+    B = ZeroMatrix(n, m)
+    C = MatrixSymbol('C', m, n)
+    E = MatrixSymbol('E', n, m)
+
+    # 1x1 block
+    assert det(BlockMatrix([[A]])) == det(A)
+
+    # Block lower triangular: [[A, 0], [C, D]]
+    M_lower = BlockMatrix([[A, B], [C, D]])
+    assert det(M_lower) == det(A) * det(D)
+
+    # Block upper triangular: [[A, E], [0, D]]
+    Z_mn = ZeroMatrix(m, n)
+    M_upper = BlockMatrix([[A, E], [Z_mn, D]])
+    assert det(M_upper) == det(A) * det(D)
+
+    # Square BlockMatrix with non-square diagonal blocks should not apply the triangular formula
+    P = MatrixSymbol('P', 2, 3)
+    B_21 = ZeroMatrix(2, 1)
+    C_23 = MatrixSymbol('C', 2, 3)
+    D_21 = MatrixSymbol('D', 2, 1)
+    M_nonsq = BlockMatrix([[P, B_21], [C_23, D_21]])
+    assert isinstance(det(M_nonsq), Determinant)
+

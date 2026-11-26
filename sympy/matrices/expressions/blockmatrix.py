@@ -207,11 +207,14 @@ class BlockMatrix(MatrixExpr):
         if self.blockshape == (2, 2):
             [[A, B],
              [C, D]] = self.blocks.tolist()
+            if (A.is_square and D.is_square and
+                    (isinstance(B, ZeroMatrix) or isinstance(C, ZeroMatrix))):
+                return det(A)*det(D)
             if ask(Q.invertible(A)):
                 return det(A)*det(D - C*A.I*B)
             elif ask(Q.invertible(D)):
                 return det(D)*det(A - B*D.I*C)
-        return Determinant(self)
+        return None
 
     def _eval_as_real_imag(self):
         real_matrices = [re(matrix) for matrix in self.blocks]
